@@ -1,5 +1,5 @@
 /**
- * Interfaces {@code JpaRepository<Entidade, Id>}. Sem implementação
- * própria nem lógica de negócio — isso vive no service.
+ * {@code JpaRepository<Entity, Id>} interfaces. No custom implementation
+ * and no business logic — that lives in the service.
  */
 package com.taskmanager.repository;

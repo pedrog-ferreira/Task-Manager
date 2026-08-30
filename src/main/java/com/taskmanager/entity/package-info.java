@@ -1,7 +1,7 @@
 /**
- * Entidades JPA (@Entity), mapeadas 1:1 para as tabelas criadas pelas
- * migrações Flyway em {@code src/main/resources/db/migration}.
- * Com {@code ddl-auto: validate}, o schema aqui descrito tem sempre
- * de bater certo com uma migração já aplicada.
+ * JPA entities (@Entity), mapped 1:1 to the tables created by the Flyway
+ * migrations in {@code src/main/resources/db/migration}.
+ * With {@code ddl-auto: validate}, the schema described here must always
+ * match an already-applied migration.
  */
 package com.taskmanager.entity;

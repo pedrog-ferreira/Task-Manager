@@ -1,5 +1,5 @@
 /**
- * Controllers REST (@RestController). Recebem/devolvem apenas DTOs,
- * nunca entidades JPA diretamente. Delegam a lógica para o service.
+ * REST controllers (@RestController). They accept/return only DTOs,
+ * never JPA entities directly. Business logic is delegated to the service.
  */
 package com.taskmanager.controller;

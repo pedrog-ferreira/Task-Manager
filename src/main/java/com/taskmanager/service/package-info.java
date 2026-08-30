@@ -1,6 +1,6 @@
 /**
- * Lógica de negócio. Os controllers chamam services, os services chamam
- * repositories — nunca ao contrário, e o controller nunca fala
- * diretamente com o repository.
+ * Business logic. Controllers call services, services call repositories —
+ * never the other way around, and a controller never talks to a repository
+ * directly.
  */
 package com.taskmanager.service;

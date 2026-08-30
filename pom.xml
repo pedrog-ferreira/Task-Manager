@@ -19,6 +19,10 @@
 
     <properties>
         <java.version>23</java.version>
+        <!-- spring-boot-starter-parent 3.3.5 pins Lombok to 1.18.34, which does
+             not support JDK 23: on the command-line build it fails silently and
+             generates no getters/setters. 1.18.36+ fixes it. -->
+        <lombok.version>1.18.40</lombok.version>
     </properties>
 
     <dependencies>
@@ -77,6 +81,23 @@
 
     <build>
         <plugins>
+            <!-- The Spring Boot parent does not put Lombok in annotationProcessorPaths
+                 and JDK 23 does not run annotation processors from the classpath only —
+                 without this, Lombok never generates getters/setters in the Maven build. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

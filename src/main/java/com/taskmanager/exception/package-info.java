@@ -1,5 +1,5 @@
 /**
- * Exceções de domínio (ex.: {@code TarefaNaoEncontradaException}) e o
- * {@code @RestControllerAdvice} que as traduz em respostas HTTP consistentes.
+ * Domain exceptions (e.g. {@code TaskNotFoundException}) and the
+ * {@code @RestControllerAdvice} that translates them into consistent HTTP responses.
  */
 package com.taskmanager.exception;
