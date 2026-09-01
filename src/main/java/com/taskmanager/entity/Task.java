@@ -31,6 +31,16 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Constructor for application code. {@code status}/{@code priority} keep
+     * their defaults (PENDING / MEDIUM) and {@code createdAt} is set on insert.
+     * JPA uses the protected no-args constructor.
+     */
+    public Task(String title, Project project) {
+        this.title = title;
+        this.project = project;
+    }
+
     @Column(nullable = false, length = 150)
     private String title;
 

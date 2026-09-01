@@ -1,27 +1,35 @@
 package com.taskmanager.support;
 
-import java.lang.reflect.Constructor;
+import com.taskmanager.entity.Project;
+import com.taskmanager.entity.Status;
+import com.taskmanager.entity.Task;
+import com.taskmanager.entity.User;
 
 /**
- * Factory for tests to build entities.
- * <p>
- * The entities have {@code @NoArgsConstructor(access = PROTECTED)} — a
- * constructor required by JPA but not meant for direct use by the application.
- * Until there is a {@code @Builder} or a domain factory (coming with the
- * service layer), tests instantiate them via reflection from here, in one place.
+ * Factory helpers so tests don't repeat the boilerplate of filling required
+ * fields. Uses the public constructors the entities expose for the service layer.
  */
 public final class TestEntities {
 
     private TestEntities() {
     }
 
-    public static <T> T newInstance(Class<T> type) {
-        try {
-            Constructor<T> ctor = type.getDeclaredConstructor();
-            ctor.setAccessible(true);
-            return ctor.newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Could not instantiate " + type.getSimpleName(), e);
-        }
+    /** A user with the given email and a throwaway password/name. */
+    public static User user(String email) {
+        return new User(email, "test-password", "Test User");
+    }
+
+    /** A project owned by {@code owner}, with no description. */
+    public static Project project(String name, User owner) {
+        Project project = new Project(name, null);
+        project.setUser(owner);
+        return project;
+    }
+
+    /** A task in the given status, attached to {@code project}. */
+    public static Task task(String title, Status status, Project project) {
+        Task task = new Task(title, project);
+        task.setStatus(status);
+        return task;
     }
 }

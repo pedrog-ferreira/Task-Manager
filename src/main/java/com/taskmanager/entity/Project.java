@@ -32,6 +32,16 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Constructor for application code. The owner ({@code user}) is set
+     * afterwards with the setter, and {@code tasks}/{@code createdAt} are
+     * managed by JPA. JPA itself uses the protected no-args constructor.
+     */
+    public Project(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
     @Column(nullable = false, length = 100)
     private String name;
 

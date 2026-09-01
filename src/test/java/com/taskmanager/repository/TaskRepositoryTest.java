@@ -11,10 +11,11 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.time.LocalDate;
 import java.util.List;
 
-import static com.taskmanager.support.TestEntities.newInstance;
+import static com.taskmanager.support.TestEntities.project;
+import static com.taskmanager.support.TestEntities.task;
+import static com.taskmanager.support.TestEntities.user;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -39,8 +40,8 @@ class TaskRepositoryTest {
     @Autowired
     private TestEntityManager em;
 
-    private Project project;
-    private Project otherProject;
+    private Project projectA;
+    private Project projectB;
 
     @BeforeEach
     void setUp() {
@@ -51,26 +52,14 @@ class TaskRepositoryTest {
         em.getEntityManager().createQuery("delete from Project").executeUpdate();
         em.getEntityManager().createQuery("delete from User").executeUpdate();
 
-        User user = newInstance(User.class);
-        user.setEmail("ana@example.com");
-        user.setPassword("irrelevant");
-        user.setName("Ana");
-        em.persist(user);
+        User user = em.persist(user("ana@example.com"));
+        projectA = em.persist(project("Project A", user));
+        projectB = em.persist(project("Project B", user));
 
-        project = newInstance(Project.class);
-        project.setName("Project A");
-        project.setUser(user);
-        em.persist(project);
-
-        otherProject = newInstance(Project.class);
-        otherProject.setName("Project B");
-        otherProject.setUser(user);
-        em.persist(otherProject);
-
-        persistTask("Write tests", Status.IN_PROGRESS, project);
-        persistTask("Review PR", Status.IN_PROGRESS, project);
-        persistTask("Deploy", Status.DONE, project);
-        persistTask("Backlog item", Status.PENDING, otherProject);
+        em.persist(task("Write tests", Status.IN_PROGRESS, projectA));
+        em.persist(task("Review PR", Status.IN_PROGRESS, projectA));
+        em.persist(task("Deploy", Status.DONE, projectA));
+        em.persist(task("Backlog item", Status.PENDING, projectB));
 
         // Flush the INSERTs and clear the first-level cache: the queries below
         // hit the DB for real, they do not return instances already in memory.
@@ -90,14 +79,14 @@ class TaskRepositoryTest {
 
     @Test
     void filtersTasksByProject() {
-        assertThat(repository.findByProjectId(project.getId())).hasSize(3);
-        assertThat(repository.findByProjectId(otherProject.getId())).hasSize(1);
+        assertThat(repository.findByProjectId(projectA.getId())).hasSize(3);
+        assertThat(repository.findByProjectId(projectB.getId())).hasSize(1);
     }
 
     @Test
     void filtersByProjectAndStatusTogether() {
         List<Task> doneInProjectA =
-                repository.findByProjectIdAndStatus(project.getId(), Status.DONE);
+                repository.findByProjectIdAndStatus(projectA.getId(), Status.DONE);
 
         assertThat(doneInProjectA)
                 .singleElement()
@@ -110,14 +99,5 @@ class TaskRepositoryTest {
         assertThat(repository.countByStatus(Status.IN_PROGRESS)).isEqualTo(2);
         assertThat(repository.countByStatus(Status.PENDING)).isEqualTo(1);
         assertThat(repository.countByStatus(Status.DONE)).isEqualTo(1);
-    }
-
-    private void persistTask(String title, Status status, Project owner) {
-        Task task = newInstance(Task.class);
-        task.setTitle(title);
-        task.setStatus(status);
-        task.setProject(owner);
-        task.setDueDate(LocalDate.now().plusDays(7));
-        em.persist(task);
     }
 }

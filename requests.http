@@ -1,0 +1,56 @@
+### Task Manager — Project CRUD
+# IntelliJ ships an HTTP client: click the green ▶ next to each request.
+# Run the app first:  mvn spring-boot:run   (needs `docker compose up -d`)
+#
+# Check the STATUS CODE, not just the body:
+#   create → 201    get/list/update → 200    delete → 204
+#   validation error → 400    unknown id → 404    duplicate name → 409
+
+@host = http://localhost:8080
+
+### Create a project  → 201 Created
+POST {{host}}/api/projects
+Content-Type: application/json
+
+{
+  "name": "Interview prep",
+  "description": "24-day plan"
+}
+
+### List all projects  → 200
+GET {{host}}/api/projects
+
+### Get one project  → 200 (use an id returned above)
+GET {{host}}/api/projects/73
+
+### Update a project  → 200
+PUT {{host}}/api/projects/73
+Content-Type: application/json
+
+{
+  "name": "Interview prep (revised)",
+  "description": "24-day plan, tightened"
+}
+
+### Delete a project  → 204 No Content
+DELETE {{host}}/api/projects/73
+
+### Validation error: blank name  → 400  { "name": "Name is required" }
+POST {{host}}/api/projects
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+### Not found: unknown id  → 404  { "status": 404, "message": "Project 999 not found" }
+GET {{host}}/api/projects/999
+
+### Conflict: duplicate name  → 409  (run the first "Create" twice)
+POST {{host}}/api/projects
+Content-Type: application/json
+
+{
+  "name": "Interview prep",
+  "description": "duplicate on purpose"
+}
