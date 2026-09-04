@@ -55,7 +55,15 @@ public class ProjectService {
         this.userRepository = userRepository;
     }
 
-    /** All projects, newest-or-not in insertion order, as DTOs. */
+    /**
+     * All projects, newest-or-not in insertion order, as DTOs.
+     * <p>
+     * {@code repository.findAll()} is overridden with {@code @EntityGraph} to
+     * fetch {@code tasks} in the same query — without it, {@code toDTO} touching
+     * {@code p.getTasks()} for each project is a classic N+1. See
+     * {@code ProjectRepository} and {@code notas-tecnicas.md}, Dia 3, for the
+     * measured query counts and the two other fixes considered.
+     */
     public List<ProjectDTO> list() {
         return repository.findAll().stream()
                 .map(this::toDTO)
@@ -125,9 +133,10 @@ public class ProjectService {
 
     /**
      * Entity to DTO. Called only from inside a transaction, so {@code getTasks()}
-     * (LAZY) can be traversed. {@code .size()} triggers one extra SELECT per
-     * project — fine for this exercise; see the walkthrough doc for the
-     * {@code @EntityGraph} / projection alternatives.
+     * (LAZY) can be traversed. When called from {@link #list()}, {@code tasks}
+     * is already loaded by the {@code @EntityGraph} on {@code findAll()}, so
+     * {@code .size()} is free; from {@link #get(Long)} (plain {@code findById})
+     * it costs one extra SELECT for that single project — fine outside a loop.
      */
     private ProjectDTO toDTO(Project p) {
         return new ProjectDTO(
