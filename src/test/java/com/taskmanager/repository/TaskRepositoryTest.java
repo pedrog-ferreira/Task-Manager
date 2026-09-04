@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.taskmanager.support.TestEntities.project;
@@ -58,8 +59,14 @@ class TaskRepositoryTest {
 
         em.persist(task("Write tests", Status.IN_PROGRESS, projectA));
         em.persist(task("Review PR", Status.IN_PROGRESS, projectA));
-        em.persist(task("Deploy", Status.DONE, projectA));
-        em.persist(task("Backlog item", Status.PENDING, projectB));
+
+        Task deploy = task("Deploy", Status.DONE, projectA);
+        deploy.setDueDate(LocalDate.now().minusDays(2));
+        em.persist(deploy);
+
+        Task backlog = task("Backlog item", Status.PENDING, projectB);
+        backlog.setDueDate(LocalDate.now().minusDays(1));
+        em.persist(backlog);
 
         // Flush the INSERTs and clear the first-level cache: the queries below
         // hit the DB for real, they do not return instances already in memory.
@@ -99,5 +106,35 @@ class TaskRepositoryTest {
         assertThat(repository.countByStatus(Status.IN_PROGRESS)).isEqualTo(2);
         assertThat(repository.countByStatus(Status.PENDING)).isEqualTo(1);
         assertThat(repository.countByStatus(Status.DONE)).isEqualTo(1);
+    }
+
+    @Test
+    void countsTasksByProjectAndStatus() {
+        assertThat(repository.countByProjectIdAndStatus(projectA.getId(), Status.IN_PROGRESS)).isEqualTo(2);
+        assertThat(repository.countByProjectIdAndStatus(projectA.getId(), Status.DONE)).isEqualTo(1);
+        assertThat(repository.countByProjectIdAndStatus(projectB.getId(), Status.IN_PROGRESS)).isZero();
+    }
+
+    @Test
+    void findsTasksPastDueInAGivenStatus() {
+        List<Task> pendingPastDue =
+                repository.findByStatusAndDueDateBefore(Status.PENDING, LocalDate.now());
+
+        assertThat(pendingPastDue)
+                .singleElement()
+                .extracting(Task::getTitle)
+                .isEqualTo("Backlog item");
+    }
+
+    @Test
+    void findAllByProjectIdReturnsTheProjectsTasksWithTheProjectReachable() {
+        // The @EntityGraph makes the load eager; here we just assert the rows and
+        // that project.getName() resolves. Proving the N+1 is gone needs statement
+        // counting — see docs/task-crud-walkthrough.md for the manual check.
+        List<Task> tasks = repository.findAllByProjectId(projectA.getId());
+
+        assertThat(tasks)
+                .hasSize(3)
+                .allSatisfy(task -> assertThat(task.getProject().getName()).isEqualTo("Project A"));
     }
 }

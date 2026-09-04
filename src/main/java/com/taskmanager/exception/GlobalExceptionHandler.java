@@ -2,6 +2,7 @@ package com.taskmanager.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -41,6 +42,28 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> conflict(DuplicateNameException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("status", 409, "message", ex.getMessage()));
+    }
+
+    /**
+     * 409 — a state-dependent domain rule was broken (e.g. reopening a completed
+     * task). The request was valid; the current state doesn't allow it.
+     */
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<Map<String, Object>> businessRule(BusinessRuleException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("status", 409, "message", ex.getMessage()));
+    }
+
+    /**
+     * 400 — the request body couldn't be parsed into the target type. The common
+     * case: an enum value that doesn't exist (e.g. {@code "priority": "URGENT"}).
+     * Jackson fails before the controller runs; without this handler Spring would
+     * return a 500, but the fault is the client's, so 400 is correct.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> notReadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("status", 400, "message", "Malformed or unreadable request body"));
     }
 
     /**

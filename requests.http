@@ -54,3 +54,64 @@ Content-Type: application/json
   "name": "Interview prep",
   "description": "duplicate on purpose"
 }
+
+
+### ─────────────────────────  Task CRUD  ─────────────────────────
+# create → 201    list → 200    change status → 200    delete → 204
+# due date in the past → 400    invalid enum → 400 (not 500!)
+# unknown project → 404    reopen a DONE task → 409
+# Use a projectId returned by the project "Create" above.
+
+### Create a task  → 201 Created
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Review Streams 8",
+  "priority": "HIGH",
+  "dueDate": "2026-09-15",
+  "projectId": 74
+}
+
+### List a project's tasks  → 200
+GET {{host}}/api/projects/74/tasks
+
+### Change status  → 200  (use a task id returned above)
+PATCH {{host}}/api/tasks/169/status?status=DONE
+
+### Reopen a completed task  → 409  { "status": 409, "message": "A completed task cannot be reopened" }
+PATCH {{host}}/api/tasks/169/status?status=PENDING
+
+### Delete a task  → 204 No Content
+DELETE {{host}}/api/tasks/169
+
+### Validation error: due date in the past  → 400  { "dueDate": "Due date cannot be in the past" }
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Late task",
+  "priority": "HIGH",
+  "dueDate": "2020-01-01",
+  "projectId": 74
+}
+
+### Invalid enum value  → 400 (NOT 500)  { "status": 400, "message": "Malformed or unreadable request body" }
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Bad priority",
+  "priority": "URGENT",
+  "projectId": 74
+}
+
+### Unknown project  → 404  { "status": 404, "message": "Project 999 not found" }
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Orphan task",
+  "priority": "HIGH",
+  "projectId": 999
+}
